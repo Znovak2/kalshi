@@ -21,6 +21,14 @@ Install dependencies via:
 pip install requests pandas scikit-learn numpy
 ```
 
+## Installation
+
+To install dependencies, run:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage
 
 1. Run the main script to fetch, clean, train, and predict:
@@ -29,9 +37,15 @@ pip install requests pandas scikit-learn numpy
    python subway.py
    ```
 
-2. Check the console for the next-day forecast, MAE, and RMSE.
+2. (Optional) Launch the Jupyter notebook for interactive exploration:
 
-3. Review or archive predictions in `predictions_log.csv`.
+   ```bash
+   jupyter notebook subway.ipynb
+   ```
+
+3. The console will display the next-day forecast and evaluation metrics.
+
+4. All predictions are appended with timestamps to `predictions_log.csv` for later analysis.
 
 ## Project Structure
 
