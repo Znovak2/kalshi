@@ -18,14 +18,6 @@ This project fetches New York subway ridership data from the NYC Open Data API, 
 Install dependencies via:
 
 ```bash
-pip install requests pandas scikit-learn numpy
-```
-
-## Installation
-
-To install dependencies, run:
-
-```bash
 pip install -r requirements.txt
 ```
 
