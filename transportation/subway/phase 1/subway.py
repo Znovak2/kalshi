@@ -245,9 +245,10 @@ def main() -> int:
 	next_date, next_value = train_and_forecast(series)
 	print(f"Next-day forecast: {int(round(next_value))} on {next_date.date()}")
 
-	# 4) Save to CSV (same folder as this script)
+	# 4) Save to CSV (centralized under transportation/subway)
 	script_dir = os.path.dirname(os.path.abspath(__file__))
-	log_file = os.path.join(script_dir, "subway_predictions.csv")
+	root_dir = os.path.dirname(script_dir)
+	log_file = os.path.join(root_dir, "subway_predictions.csv")
 	save_prediction(log_file, next_date, next_value)
 	print(f"Logged prediction to: {log_file}")
 
