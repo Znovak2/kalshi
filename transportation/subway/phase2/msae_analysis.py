@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).parent
 IN = ROOT / "msae_detailed.csv"
-OUT_DIR = ROOT
+OUT_DIR = ROOT.parent / "subway_methodology" / "images"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 if not IN.exists():
     print(f"Input file not found: {IN}. Run msae_test.py first.")
@@ -40,7 +41,7 @@ per_h = df.groupby(["mode", "step"]).agg(
 ).reset_index()
 print("Per-horizon summary (first rows):")
 print(per_h.head(20))
-per_h.to_csv(OUT_DIR / "per_horizon_summary.csv", index=False)
+per_h.to_csv(ROOT / "per_horizon_summary.csv", index=False)
 
 # Boxplot per-horizon (MAE) for each mode (use errors grouped by step)
 modes = df["mode"].unique()
@@ -87,7 +88,7 @@ else:
         me = pivot["hybrid_err"].mean()
         results.append({"switch": switch, "MAE": mae, "MSE": mse, "MeanError": me})
     res_df = pd.DataFrame(results)
-    res_df.to_csv(OUT_DIR / "hybrid_results.csv", index=False)
+    res_df.to_csv(ROOT / "hybrid_results.csv", index=False)
     print("Hybrid results saved to hybrid_results.csv")
     print(res_df)
 
@@ -111,7 +112,7 @@ else:
         me = pivot["hybrid_cal_err"].mean()
         results_cal.append({"switch": switch, "MAE": mae, "MSE": mse, "MeanError": me})
     res_cal_df = pd.DataFrame(results_cal)
-    res_cal_df.to_csv(OUT_DIR / "hybrid_results_calibrated.csv", index=False)
+    res_cal_df.to_csv(ROOT / "hybrid_results_calibrated.csv", index=False)
     print("Hybrid calibrated results saved to hybrid_results_calibrated.csv")
     print(res_cal_df)
 

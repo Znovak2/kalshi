@@ -149,7 +149,7 @@ def compute_iterative_bias_from_file(folder: str) -> float:
     candidates = [
         os.path.join(here, "msae_detailed.csv"),
         os.path.join(parent, "msae_detailed.csv"),
-        os.path.join(parent, "phase 2", "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "msae_detailed.csv"),
     ]
     try:
         for path in candidates:

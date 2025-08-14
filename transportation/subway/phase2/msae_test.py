@@ -4,8 +4,8 @@ Backtest harness to compute MSAE (and related metrics) for different prediction 
 This script runs a small rolling evaluation over recent candidate training dates and
 compares three modes:
  - single-step (one-day forecast using a LightGBMModel)
- - multi-step (multi-output model to Sunday, from `subwayPlus1.py`)
- - iterative (one-step model used iteratively, from `predictionByDay.py`)
+ - multi-step (multi-output model to Sunday, from `predictionByDay_B.py`)
+ - iterative (one-step model used iteratively, from `predictionByDay_A.py`)
 
 Metrics reported per mode: count, MAE, MSE, Mean Error (bias), MSAE.
 
@@ -43,8 +43,9 @@ ROOT = Path(__file__).parent
 # prefer Zach versions; fallback gracefully
 # Candidate filenames for the two modes (support renamed files)
 MOD_CANDIDATES = {
-    "subwayPlus1": ["subwayPlus1.py", "predictionByDay_B.py"],
-    "predictionByDay": ["predictionByDay.py", "predictionByDay_A.py"],
+    # explicit current filenames used by this harness
+    "predictionByDay_B": ["predictionByDay_B.py"],
+    "predictionByDay_A": ["predictionByDay_A.py"],
 }
 
 mods = {}
@@ -96,10 +97,10 @@ def single_step_predict(train_series, horizon: int = 1) -> Tuple[pd.Timestamp, f
     # Build future_covariates for training span (try local modules first)
     future_covariates = None
     try:
-        if mods.get("predictionByDay"):
-            future_covariates = mods["predictionByDay"].build_future_covariates(train_series)
-        elif mods.get("subwayPlus1"):
-            future_covariates = mods["subwayPlus1"].build_future_covariates(train_series)
+        if mods.get("predictionByDay_A"):
+            future_covariates = mods["predictionByDay_A"].build_future_covariates(train_series)
+        elif mods.get("predictionByDay_B"):
+            future_covariates = mods["predictionByDay_B"].build_future_covariates(train_series)
     except Exception:
         future_covariates = None
 
@@ -139,10 +140,10 @@ def single_step_predict(train_series, horizon: int = 1) -> Tuple[pd.Timestamp, f
     # Build extended covariates covering the forecast horizon
     future_covariates_ext = None
     try:
-        if mods.get("predictionByDay"):
-            future_covariates_ext = mods["predictionByDay"].extend_future_covariates(train_series, days=horizon)
-        elif mods.get("subwayPlus1"):
-            future_covariates_ext = mods["subwayPlus1"].extend_future_covariates(train_series, days=horizon)
+        if mods.get("predictionByDay_A"):
+            future_covariates_ext = mods["predictionByDay_A"].extend_future_covariates(train_series, days=horizon)
+        elif mods.get("predictionByDay_B"):
+            future_covariates_ext = mods["predictionByDay_B"].extend_future_covariates(train_series, days=horizon)
     except Exception:
         future_covariates_ext = None
 
@@ -259,9 +260,9 @@ def main():
             print(f"single-step failed for {train_end}: {e}")
 
         # multi-step (multi-output)
-        if mods.get("subwayPlus1"):
+        if mods.get("predictionByDay_B"):
             try:
-                multi_preds = mods["subwayPlus1"].train_and_forecast_to_sunday(train_series)
+                multi_preds = mods["predictionByDay_B"].train_and_forecast_to_sunday(train_series)
                 # convert dates to date() keys
                 multi_preds = [(d.date(), v) for d, v in multi_preds]
                 m_rows = evaluate_predictions(actuals, multi_preds, train_end)
@@ -273,17 +274,17 @@ def main():
                 print(f"multi-step failed for {train_end}: {e}")
 
         # iterative
-        if mods.get("predictionByDay"):
-            try:
-                it_preds = mods["predictionByDay"].train_and_forecast_iterative(train_series)
-                it_preds = [(d.date(), v) for d, v in it_preds]
-                it_rows = evaluate_predictions(actuals, it_preds, train_end)
-                for r in it_rows:
-                    r["mode"] = "iterative"
-                detailed_rows.extend(it_rows)
-                mode_errors["iterative"].extend([r["error"] for r in it_rows])
-            except Exception as e:
-                print(f"iterative failed for {train_end}: {e}")
+            if mods.get("predictionByDay_A"):
+                try:
+                    it_preds = mods["predictionByDay_A"].train_and_forecast_iterative(train_series)
+                    it_preds = [(d.date(), v) for d, v in it_preds]
+                    it_rows = evaluate_predictions(actuals, it_preds, train_end)
+                    for r in it_rows:
+                        r["mode"] = "iterative"
+                    detailed_rows.extend(it_rows)
+                    mode_errors["iterative"].extend([r["error"] for r in it_rows])
+                except Exception as e:
+                    print(f"iterative failed for {train_end}: {e}")
 
     # Save detailed master CSV
     out_master = ROOT / "msae_detailed.csv"
