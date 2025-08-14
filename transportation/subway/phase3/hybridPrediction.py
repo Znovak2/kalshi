@@ -26,7 +26,7 @@ from __future__ import annotations
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import List, Tuple, Any, cast
+from typing import List, Tuple, Any, cast, Union
 
 import pandas as pd
 import requests
@@ -190,9 +190,72 @@ def train_iterative_model(series):
 
     model.fit(series_scaled, future_covariates=build_future_covariates(series))
     return model, scaler
+ 
+ 
+def compute_iterative_bias_by_dow_from_file(folder: str) -> dict[int, float]:
+    """Compute negative mean error per weekday (0=Mon..6=Sun) for iterative mode."""
+    here = os.path.abspath(folder)
+    parent = os.path.dirname(here)
+    candidates = [
+        os.path.join(here, "msae_detailed.csv"),
+        os.path.join(parent, "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "phase2_data", "msae_detailed.csv"),
+    ]
+    try:
+        for path in candidates:
+            if os.path.isfile(path):
+                df = pd.read_csv(path)
+                if {"mode", "predicted", "actual", "target_date"}.issubset(df.columns):
+                    it = df[df["mode"].str.lower() == "iterative"].copy()
+                    if not it.empty:
+                        it["target_date"] = pd.to_datetime(it["target_date"])
+                        it["weekday"] = it["target_date"].dt.weekday
+                        # bias = -mean_error per weekday
+                        grp = it.groupby("weekday")
+                        bias = {wd: float(-(g["predicted"] - g["actual"]).mean()) for wd, g in grp}
+                        # default 0 for missing days
+                        return {d: bias.get(d, 0.0) for d in range(7)}
+        # no file or no data, return zeros
+        return {d: 0.0 for d in range(7)}
+    except Exception:
+        return {d: 0.0 for d in range(7)}
+
+def compute_optimal_switch_from_file(folder: str, horizon: int) -> int:
+    """Determine best hybrid switch step by minimizing MAE from msae_detailed.csv."""
+    here = os.path.abspath(folder)
+    parent = os.path.dirname(here)
+    candidates = [
+        os.path.join(here, "msae_detailed.csv"),
+        os.path.join(parent, "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "phase2_data", "msae_detailed.csv"),
+    ]
+    try:
+        for path in candidates:
+            if os.path.isfile(path):
+                df = pd.read_csv(path)
+                if {"mode", "step", "abs_error"}.issubset(df.columns):
+                    # compute mean abs_error per mode and step
+                    df = df[df["mode"].str.lower().isin(["iterative", "multi"])]
+                    mae = df.groupby([df["mode"].str.lower(), df["step"]])["abs_error"].mean().unstack(fill_value=float('inf'))
+                    steps = list(range(1, horizon + 1))
+                    best_s, best_err = 1, float('inf')
+                    for s in steps:
+                        # error sum: iterative for <=s, multi for >s
+                        err_it = mae.get("iterative", pd.Series()).reindex(steps).fillna(float('inf')).iloc[:s].sum()
+                        err_mu = mae.get("multi", pd.Series()).reindex(steps).fillna(float('inf')).iloc[s:].sum()
+                        total = err_it + err_mu
+                        if total < best_err:
+                            best_err, best_s = total, s
+                    return best_s
+        # fallback to midpoint
+        return max(1, horizon // 2)
+    except Exception:
+        return max(1, horizon // 2)
 
 
-def predict_iterative_calibrated(series, model, scaler, horizon: int, bias_adj: float) -> List[Tuple[pd.Timestamp, float]]:
+def predict_iterative_calibrated(series, model, scaler, horizon: int, bias_adj: Union[float, dict[int, float]]) -> List[Tuple[pd.Timestamp, float]]:
     from darts import TimeSeries
 
     last_obs = series.end_time()
@@ -209,8 +272,13 @@ def predict_iterative_calibrated(series, model, scaler, horizon: int, bias_adj: 
         if isinstance(pred_any, list):
             pred_any = pred_any[0]
         pred_ts = cast(TimeSeries, pred_any)
-        pred_value = float(pred_ts.last_value()) + float(bias_adj)
+        # compute prediction date then apply scalar or day-of-week bias adjustment
         pred_date = last_obs + timedelta(days=step)
+        if isinstance(bias_adj, dict):
+            bias = bias_adj.get(pred_date.weekday(), 0.0)
+        else:
+            bias = float(bias_adj)
+        pred_value = float(pred_ts.last_value()) + bias
         preds.append((pred_date, pred_value))
     return preds
 
@@ -284,7 +352,7 @@ def main(argv: list[str] | None = None) -> int:
     ensure_deps()
 
     parser = argparse.ArgumentParser(description="Hybrid + calibration predictions to upcoming Sunday")
-    parser.add_argument("--switch", type=int, default=5, help="Use iterative (calibrated) for steps <= switch, multi for steps > switch")
+    parser.add_argument("--switch", type=int, default=None, help="Hybrid switch step: <=switch iterative, >switch multi (default: auto-optimal)")
     parser.add_argument("--bias", type=float, default=None, help="Override bias adjustment to add to iterative predictions (default: auto from msae_detailed.csv if available, else 0)")
     args = parser.parse_args(argv)
 
@@ -304,12 +372,15 @@ def main(argv: list[str] | None = None) -> int:
     horizon = days_until_sunday
     print(f"Forecast horizon to Sunday: {horizon} day(s)")
 
-    # Determine bias adjustment
+    # Determine bias adjustment (scalar override or per-day)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    bias_adj = 0.0 if args.bias is None else float(args.bias)
     if args.bias is None:
-        bias_adj = compute_iterative_bias_from_file(script_dir)
-    print(f"Iterative bias adjustment: {bias_adj:.1f}")
+        bias_map = compute_iterative_bias_by_dow_from_file(script_dir)
+        bias_adj = bias_map
+        print(f"Iterative bias adjustment by weekday: {bias_map}")
+    else:
+        bias_adj = float(args.bias)
+        print(f"Iterative global bias adjustment: {bias_adj:.1f}")
 
     print("Training iterative model…")
     it_model, scaler = train_iterative_model(series)
@@ -323,7 +394,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Multi-step model failed ({e}); falling back to iterative for all steps.")
         mu_preds = it_preds_cal[:]
 
-    switch = max(1, min(args.switch, horizon))
+    # Determine hybrid switch step
+    if args.switch is None:
+        switch = compute_optimal_switch_from_file(script_dir, horizon)
+        print(f"Auto-optimal switch step determined: {switch}")
+    else:
+        switch = max(1, min(args.switch, horizon))
+        print(f"Using provided switch step: {switch}")
     print(f"Composing hybrid with switch={switch} (iterative<=switch, multi>switch)…")
     hybrid = compose_hybrid(it_preds_cal, mu_preds, switch=switch)
 
