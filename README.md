@@ -1,53 +1,114 @@
-# Subway Ridership Prediction
+# Kalshi ML Projects
 
-This project fetches New York subway ridership data from the NYC Open Data API, cleans and processes it, and trains a regression model to forecast the next day's total count.
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://python.org/downloads/)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Features
+A collection of machine learning projects and trading algorithms for predictive modeling and market analysis.
 
-- Downloads JSON data from `https://data.ny.gov/resource/sayj-mze2.json`
-- Filters to subway entries and computes rolling statistics
-- Builds lag-based features for supervised learning
-- Trains a `RandomForestRegressor` to predict next-day ridership
-- Logs predictions with timestamps to CSV for later accuracy tracking
+## 🚀 Quick Start
 
-## Prerequisites
-
-- Python 3.7+
-- Packages: `requests`, `pandas`, `scikit-learn`, `numpy`
-
-Install dependencies via:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-1. Run the main script to fetch, clean, train, and predict:
-
+1. **Clone the repository**
    ```bash
-   python subway.py
+   git clone https://github.com/Znovak2/kalshi.git
+   cd kalshi
    ```
 
-2. (Optional) Launch the Jupyter notebook for interactive exploration:
-
+2. **Set up Python environment**
    ```bash
-   jupyter notebook subway.ipynb
+   python -m venv .venv
+   # On Windows
+   .venv\Scripts\activate
+   # On macOS/Linux
+   source .venv/bin/activate
    ```
 
-3. The console will display the next-day forecast and evaluation metrics.
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. All predictions are appended with timestamps to `predictions_log.csv` for later analysis.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 kalshi/
-├── subway.py          # Main script: fetch, clean, model, predict
-├── subway.ipynb       # Jupyter notebook with interactive exploration
-└── predictions_log.csv# (auto-generated) logged forecasts
+├── transportation/         # Transportation analytics
+│   └── subway/            # NYC Subway ridership prediction
+├── weather/               # Weather prediction models
+├── tutorial/              # Learning materials and examples
+├── data/                  # Datasets and data files
+├── requirements.txt       # Python dependencies
+└── README.md             # This file
 ```
 
-## License
+## 🛠️ Available Projects
 
-MIT License. See `LICENSE` for details.
+### 🚇 [NYC Subway Ridership Prediction](transportation/subway/)
+Advanced 4-phase forecasting pipeline that predicts weekly average daily subway ridership using hybrid LightGBM models with day-of-week bias calibration.
+
+**Features:**
+- Real-time data integration via NYC Open Data API
+- Hybrid iterative/multi-step LightGBM forecasting
+- Automated bias calibration by day-of-week
+- Historical backtesting and model evaluation
+- Weekly averaging with actual data integration
+
+**Quick Run:**
+```bash
+cd transportation/subway
+python predictSubwayDailyAverage.py --verbose
+```
+
+### 🌤️ Weather Prediction Models
+*[Coming Soon]* - Weather forecasting models and analysis tools.
+
+### 📚 Tutorials
+Example implementations and learning materials for getting started with the project frameworks.
+
+## 🧰 Technology Stack
+
+- **Core:** Python 3.7+, pandas, NumPy
+- **ML Libraries:** scikit-learn, LightGBM, u8darts (TimeSeries)
+- **Data Sources:** NYC Open Data API, various market data APIs
+- **Visualization:** matplotlib, plotly
+- **Development:** Jupyter notebooks, pytest
+
+## 🔧 Development Setup
+
+1. **Activate virtual environment**
+   ```bash
+   # Windows
+   .venv\Scripts\activate
+   # macOS/Linux  
+   source .venv/bin/activate
+   ```
+
+2. **Install development dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run tests** (when available)
+   ```bash
+   pytest tests/
+   ```
+
+## 📊 Performance & Results
+
+Each project includes detailed methodology, backtesting results, and performance metrics. See individual project README files for specific results and benchmarks.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🏷️ Tags
+
+`machine-learning` `time-series` `forecasting` `transportation` `nyc-data` `lightgbm` `python` `data-science`
