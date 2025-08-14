@@ -1,0 +1,50 @@
+{
+  "daily_average": 3424967.304094612,
+  "period_description": "2025-08-11 to 2025-08-17",
+  "start_date": "2025-08-11",
+  "end_date": "2025-08-17",
+  "total_period_ridership": 23974771.128662284,
+  "num_days": 7,
+  "is_complete_week": true,
+  "has_mixed_data": true,
+  "min_daily": 2190878.622934583,
+  "max_daily": 3986593.792238079,
+  "daily_breakdown": {
+    "Monday": {
+      "date": "2025-08-11",
+      "ridership": 3538117,
+      "data_type": "actual"
+    },
+    "Tuesday": {
+      "date": "2025-08-12",
+      "ridership": 3871209,
+      "data_type": "actual"
+    },
+    "Wednesday": {
+      "date": "2025-08-13",
+      "ridership": 3986594,
+      "data_type": "predicted"
+    },
+    "Thursday": {
+      "date": "2025-08-14",
+      "ridership": 3941591,
+      "data_type": "predicted"
+    },
+    "Friday": {
+      "date": "2025-08-15",
+      "ridership": 3742714,
+      "data_type": "predicted"
+    },
+    "Saturday": {
+      "date": "2025-08-16",
+      "ridership": 2703668,
+      "data_type": "predicted"
+    },
+    "Sunday": {
+      "date": "2025-08-17",
+      "ridership": 2190879,
+      "data_type": "predicted"
+    }
+  },
+  "calculation_timestamp": "2025-08-14T12:18:46.981241"
+}

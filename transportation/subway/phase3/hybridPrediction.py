@@ -296,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
     series = build_series(ny_df)
     start_date = pd.Timestamp(series.start_time()).date()
     end_date = pd.Timestamp(series.end_time()).date()
-    print(f"Series span: {start_date} → {end_date}  (n={len(series)})")
+    print(f"Series span: {start_date} -> {end_date}  (n={len(series)})")
 
     last_obs = series.end_time()
     wd = last_obs.weekday()
@@ -330,9 +330,8 @@ def main(argv: list[str] | None = None) -> int:
     for dt, pv in hybrid:
         print(f"Predicted {dt.date()}: {int(round(pv))}")
 
-    # Centralized CSV under transportation/subway
-    root_dir = os.path.dirname(script_dir)
-    log_file = os.path.join(root_dir, "subway_predictions.csv")
+    # Save CSV in phase3 directory
+    log_file = os.path.join(script_dir, "subway_predictions.csv")
     save_predictions(log_file, hybrid)
     print(f"Logged predictions to: {log_file}")
     return 0
