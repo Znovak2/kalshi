@@ -139,7 +139,8 @@ def train_and_forecast_holdout(series) -> Tuple[pd.Timestamp, float, float]:
     # Define train (up to last-1) and target (last)
     forecast_date = series.end_time()
     train_end = forecast_date - timedelta(days=1)
-    train_series = series.slice(end=train_end)
+    # TimeSeries.slice expects (start, end) positional args in this Darts version
+    train_series = series.slice(series.start_time(), train_end)
 
     # Covariates for train range and extended 1 day to forecast_date
     future_covariates = build_future_covariates(train_series)
