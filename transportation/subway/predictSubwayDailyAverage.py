@@ -116,7 +116,7 @@ class SubwayPredictionWorkflow:
     
     def run_phase3(self) -> bool:
         """Run Phase 3: Apply hybrid strategy (already done in phase1)."""
-        self.log("Phase 3: Hybrid strategy integrated with Phase 1", "SUCCESS")
+        self.log("✓ Phase 3: Hybrid strategy integrated with Phase 1", "SUCCESS")
         return True
     
     def run_phase4(self) -> bool:
