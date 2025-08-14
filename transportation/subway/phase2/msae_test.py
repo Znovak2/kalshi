@@ -287,7 +287,7 @@ def main():
                     print(f"iterative failed for {train_end}: {e}")
 
     # Save detailed master CSV
-    out_master = ROOT / "msae_detailed.csv"
+    out_master = ROOT / "phase2_data" / "msae_detailed.csv"
     import csv
 
     if detailed_rows:
@@ -300,18 +300,6 @@ def main():
                 row = {k: r.get(k) for k in keys}
                 w.writerow(row)
         print(f"Saved detailed results to: {out_master}")
-
-        # Save per-train_end CSVs
-        for train_end in sorted({r["train_end"] for r in detailed_rows}):
-            rows_for = [r for r in detailed_rows if r["train_end"] == train_end]
-            file_path = ROOT / f"msae_{train_end}.csv"
-            with open(file_path, "w", newline="") as f:
-                w = csv.DictWriter(f, fieldnames=keys)
-                w.writeheader()
-                for r in rows_for:
-                    row = {k: r.get(k) for k in keys}
-                    w.writerow(row)
-            print(f"Saved per-run CSV: {file_path}")
 
     # compute overall metrics and per-horizon breakdowns
     for m in ["single", "multi", "iterative"]:
