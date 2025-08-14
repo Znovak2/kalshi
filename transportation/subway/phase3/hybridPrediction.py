@@ -140,7 +140,8 @@ def compute_iterative_bias_from_file(folder: str) -> float:
     Searches:
       - folder/msae_detailed.csv
       - parent/msae_detailed.csv
-      - parent/phase 2/msae_detailed.csv
+      - parent/phase2/msae_detailed.csv
+      - parent/phase2/phase2_data/msae_detailed.csv
 
     Returns 0.0 if file missing or malformed.
     """
@@ -150,6 +151,7 @@ def compute_iterative_bias_from_file(folder: str) -> float:
         os.path.join(here, "msae_detailed.csv"),
         os.path.join(parent, "msae_detailed.csv"),
         os.path.join(parent, "phase2", "msae_detailed.csv"),
+        os.path.join(parent, "phase2", "phase2_data", "msae_detailed.csv"),
     ]
     try:
         for path in candidates:
