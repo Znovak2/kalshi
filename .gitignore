@@ -17,3 +17,6 @@ build/
 **/*_temp.csv
 **/*_backup.csv
 **/*.tmp
+
+# Tutorial folder
+tutorial/
