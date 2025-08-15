@@ -35,8 +35,8 @@ kalshi/
 ├── transportation/         # Transportation analytics
 │   └── subway/            # NYC Subway ridership prediction
 ├── weather/               # Weather prediction models
+│   └── nyc/            # NYC weather prediction
 ├── tutorial/              # Learning materials and examples
-├── data/                  # Datasets and data files
 ├── requirements.txt       # Python dependencies
 └── README.md             # This file
 ```
@@ -86,11 +86,6 @@ Example implementations and learning materials for getting started with the proj
 2. **Install development dependencies**
    ```bash
    pip install -r requirements.txt
-   ```
-
-3. **Run tests** (when available)
-   ```bash
-   pytest tests/
    ```
 
 ## 📊 Performance & Results
