@@ -170,12 +170,6 @@ python predictSubwayDailyAverage.py --verbose
 # Expected: Success message + daily_average_subway_prediction.csv created
 ```
 
-### Unit Tests
-```bash
-# Individual component testing
-python -m pytest tests/  # (when test suite is available)
-```
-
 ### Validation Checks
 - ✅ Data freshness (API connectivity)
 - ✅ Model convergence (training metrics)
@@ -230,7 +224,6 @@ WARNING: Predicted value outside expected range
 
 ## 🔮 Future Enhancements
 
-- [ ] **Real-time inference:** API endpoint for live predictions
 - [ ] **Advanced features:** Weather, events, economic indicators
 - [ ] **Model ensemble:** Multiple algorithm combination
 - [ ] **Seasonal decomposition:** Trend/seasonal component modeling
