@@ -1,23 +1,23 @@
 {
-  "daily_average": 3383808.2341365055,
+  "daily_average": 3339357.588915337,
   "period_description": "2025-08-11 to 2025-08-17",
   "start_date": "2025-08-11",
   "end_date": "2025-08-17",
-  "total_period_ridership": 23686657.638955537,
+  "total_period_ridership": 23375503.12240736,
   "num_days": 7,
   "is_complete_week": true,
   "has_mixed_data": true,
-  "min_daily": 2150785.7398162223,
+  "min_daily": 2182197.731260276,
   "max_daily": 3964166.244335332,
   "daily_breakdown": {
     "Monday": {
       "date": "2025-08-11",
-      "ridership": 3538117,
+      "ridership": 3538172,
       "data_type": "actual"
     },
     "Tuesday": {
       "date": "2025-08-12",
-      "ridership": 3871209,
+      "ridership": 3875920,
       "data_type": "actual"
     },
     "Wednesday": {
@@ -27,24 +27,24 @@
     },
     "Thursday": {
       "date": "2025-08-14",
-      "ridership": 3858831,
+      "ridership": 3729617,
       "data_type": "predicted"
     },
     "Friday": {
       "date": "2025-08-15",
-      "ridership": 3632952,
+      "ridership": 3492037,
       "data_type": "predicted"
     },
     "Saturday": {
       "date": "2025-08-16",
-      "ridership": 2670597,
+      "ridership": 2593393,
       "data_type": "predicted"
     },
     "Sunday": {
       "date": "2025-08-17",
-      "ridership": 2150786,
+      "ridership": 2182198,
       "data_type": "predicted"
     }
   },
-  "calculation_timestamp": "2025-08-14T12:52:42.459194"
+  "calculation_timestamp": "2025-08-14T22:20:43.504928"
 }

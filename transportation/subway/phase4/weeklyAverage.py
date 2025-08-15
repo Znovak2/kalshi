@@ -85,6 +85,10 @@ def get_complete_week_data(predictions_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
     """
     Combine prediction data with actual data to create a complete week dataset.
     
+    Always creates a Monday-to-Sunday week regardless of when the script is run.
+    The week is determined by finding the most recent data and building a complete
+    Monday-Sunday period that covers the prediction data.
+    
     Args:
         predictions_df: DataFrame with prediction data (columns: target_date, predicted, predicted_at)
         
@@ -101,20 +105,21 @@ def get_complete_week_data(predictions_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
     min_pred_date = predictions_df['target_date'].min()
     max_pred_date = predictions_df['target_date'].max()
     
-    # Find the Monday of the week containing the prediction dates
-    # We'll build a complete Mon-Sun week
+    # Find the Monday of the week containing the most recent prediction date
+    # This ensures we always build a Monday-Sunday week regardless of when script runs
     latest_date = max_pred_date
     days_since_monday = latest_date.weekday()  # Monday = 0, Sunday = 6
     
     # Find the Monday of this week
     monday_of_week = latest_date - timedelta(days=days_since_monday)
+    sunday_of_week = monday_of_week + timedelta(days=6)
     
     # Build complete week (Mon-Sun)
     complete_week_dates = []
     for i in range(7):
         complete_week_dates.append(monday_of_week + timedelta(days=i))
     
-    print(f"Building complete week: {monday_of_week} to {monday_of_week + timedelta(days=6)}")
+    print(f"Building complete Monday-Sunday week: {monday_of_week} to {sunday_of_week}")
     
     # Identify which dates need actual data vs predictions
     prediction_dates = set(predictions_df['target_date'].tolist())
@@ -126,13 +131,15 @@ def get_complete_week_data(predictions_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
     # Add prediction data
     latest_predictions = get_latest_predictions(predictions_df)
     for _, row in latest_predictions.iterrows():
-        result_data.append({
-            'date': row['target_date'],
-            'ridership': row['predicted'],
-            'data_type': 'predicted'
-        })
+        # Only include predictions that fall within our Monday-Sunday week
+        if monday_of_week <= row['target_date'] <= sunday_of_week:
+            result_data.append({
+                'date': row['target_date'],
+                'ridership': row['predicted'],
+                'data_type': 'predicted'
+            })
     
-    # Fetch and add actual data for missing dates
+    # Fetch and add actual data for missing dates within the Monday-Sunday week
     if missing_dates:
         print(f"Fetching actual data for {len(missing_dates)} missing dates: {missing_dates}")
         actual_data = get_actual_ridership_data(missing_dates)
@@ -355,6 +362,78 @@ def save_results(results: dict, output_path: str) -> None:
     print(f"\nResults saved to: {output_path}")
 
 
+def save_to_main_csv(results: dict, main_csv_path: str, verbose: bool = True) -> None:
+    """
+    Save results to the main daily_average_subway_prediction.csv file with robust handling.
+    
+    This function:
+    1. Reads existing CSV if it exists
+    2. Adds new entry with current calculation_date
+    3. Removes duplicates based on calculation_date (keeps latest if run multiple times same day)
+    4. Maintains historical entries
+    5. Sorts by calculation_date (newest first)
+    
+    Args:
+        results: Dictionary with calculation results
+        main_csv_path: Path to the main CSV file
+        verbose: Whether to print detailed information
+    """
+    # Prepare new entry
+    today = datetime.now().date()
+    period_type = "complete_week" if results['is_complete_week'] else "partial_period"
+    data_mix = "mixed" if results['has_mixed_data'] else "predictions_only"
+    
+    new_entry = {
+        'period': results['period_description'],
+        'period_type': period_type,
+        'data_mix': data_mix,
+        'num_days': results['num_days'],
+        'daily_average_ridership': int(round(results['daily_average'])),
+        'total_period_ridership': int(round(results['total_period_ridership'])),
+        'calculation_date': today
+    }
+    
+    # Read existing CSV if it exists
+    existing_df = pd.DataFrame()
+    if os.path.exists(main_csv_path):
+        try:
+            existing_df = pd.read_csv(main_csv_path)
+            existing_df['calculation_date'] = pd.to_datetime(existing_df['calculation_date']).dt.date
+            if verbose:
+                print(f"Loaded existing CSV with {len(existing_df)} entries")
+        except Exception as e:
+            if verbose:
+                print(f"Warning: Could not read existing CSV: {e}")
+            existing_df = pd.DataFrame()
+    
+    # Remove any existing entries with the same calculation_date
+    if not existing_df.empty:
+        before_count = len(existing_df)
+        existing_df = existing_df[existing_df['calculation_date'] != today]
+        removed_count = before_count - len(existing_df)
+        if removed_count > 0 and verbose:
+            print(f"Removed {removed_count} existing entry(ies) for {today}")
+    
+    # Add new entry
+    new_df = pd.DataFrame([new_entry])
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+    
+    # Sort by calculation_date (newest first)
+    combined_df = combined_df.sort_values('calculation_date', ascending=False).reset_index(drop=True)
+    
+    # Ensure parent directory exists
+    os.makedirs(os.path.dirname(main_csv_path), exist_ok=True)
+    
+    # Save to CSV
+    combined_df.to_csv(main_csv_path, index=False)
+    
+    if verbose:
+        print(f"Main summary updated: {main_csv_path}")
+        print(f"Total entries: {len(combined_df)} (added 1 new entry for {today})")
+        print(f"Latest period: {new_entry['period']} ({new_entry['data_mix']}, {new_entry['num_days']} days)")
+        print(f"Daily average: {new_entry['daily_average_ridership']:,} riders")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main execution function."""
     import argparse
@@ -424,12 +503,10 @@ def main(argv: list[str] | None = None) -> int:
         }
         pd.DataFrame(summary_data).to_csv(summary_path, index=False)
         
-        # Also save to main directory if requested
+        # Also save to main directory if requested (using robust saving)
         if args.save_to_main:
             main_summary_path = str(Path(output_path).parent.parent.parent / "daily_average_subway_prediction.csv")
-            pd.DataFrame(summary_data).to_csv(main_summary_path, index=False)
-            if not args.quiet:
-                print(f"Main summary saved to: {main_summary_path}")
+            save_to_main_csv(results, main_summary_path, verbose=not args.quiet)
         
         # Print key result
         if not args.quiet:
